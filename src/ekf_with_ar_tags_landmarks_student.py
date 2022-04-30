@@ -258,29 +258,44 @@ class EKF_Localization_LandmarkMap():
             landmark_id = m.id
             print 'Observed landmark: ', landmark_id
 
+            x = m.pose.pose.position.x
+            y = m.pose.pose.position.y
+
             #### Your code here ###
-            #
-            # Inside the loop, for each detected landmark, your must compute:
-            #
+
             # - \rho, range value of the landmark observation
             # - \beta, bearing value of the landmark observation (you shall express it as an angle)
+            rho = np.sqrt((x - self.odo_x)**2 + (y - self.odo_y)**2)
+            beta = np.arctan2((y - self.odo_y)/(x - self.odo_x))
             # - and create z_{k+1} = [\rho, \beta]^T, the observation vector, accordingly
-            #
+
+            z_k1 = np.array([[rho], [beta]])
             # - \lambda_x^i, the x coordinate of the landmark, from the map
             # - \lambda_y^i, the y coordinate of the landmark, from the map
-            #
+            lambda_x = ((self.landmark_map).get(m.id))[0]
+            lambda_y = ((self.landmark_map).get(m.id))[1]
+            
             # - \hat{z}_{k+1}, the predicted observation vector based on estimated pose and given map
             #   (you shall use the sefl.angle_linear_comp() helper method for composing angles)
-            #
+            hat_rho = np.sqrt((lambda_x - self.odo_x)**2 + (lambda_y - self.odo_y)**2)
+            hat_beta = np.arctan2((lambda_y - self.odo_y)/(lambda_x - self.odo_x))
+            hat_zk1 = np.array([[hat_rho], [hat_beta]])
+            
             # - \epsilon = z_{k+1} - \hat{z}_{k+1}, the innovation vector
-            #
+            epsilon = np.add(zk_1, -1*hat_zk1)
             # - All the Jacobians, H_\xi, H_w that are necessary
-            #
+            H_w = np.array([[1, 0],
+                            [0, 1]])
+            H_k = np.array([[-(lambda_x - self.odo_x)/hat_rho, -(lambda_y - self.odo_y)/hat_rho, 0],
+                            [-(lambda_y - self.odo_y)/(hat_rho)**2, -(lambda_x - self.odo_x)/(hat_rho)**2, -1]])
             # - S, the covariance matrix of the innovation vector, which is used as S^{-1} as
             #   the weight for the kalman gain, G
-            #
+            S = np.add(cov_matrix_after_linear_transf(H_k, self.pose_covariance),
+                       cov_matrix_after_linear_transf(H_w, self.W))
+            
+            
             # - G, the Kalman gain
-            #
+            
             # - Finally, plug all the above quantities into the EKF equations and update:
             #   self.pose, self.pose_covariance. Be careful that self.pose is a (1,3) array
             #   while in the equations pose change is most likely generated as a (3,1) array;
