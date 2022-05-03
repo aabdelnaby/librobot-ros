@@ -216,7 +216,7 @@ class EKF_Localization_LandmarkMap():
         # publish ekf and odom pose estimate as Path messages that can be displayed in rviz
         self.publish_ekf_and_odom_paths()
 
-        
+    # whenever you see landmark, do this:
     def observation_correction(self, msg):
         '''CALLBACK function that correct state estimatse based on marker observation. 
            AR visual markers are read by the package ar_track_alvar, 
@@ -418,6 +418,8 @@ class EKF_Localization_LandmarkMap():
 
         # publish pose from ekf to the ekf path topic
         self.ekf_path_pub.publish(path_ekf)
+
+class main(self)
 
         
     
