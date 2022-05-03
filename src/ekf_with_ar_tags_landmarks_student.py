@@ -105,10 +105,9 @@ class EKF_Localization_LandmarkMap():
 
         # initialize the pose using odom + normal noise, if pose is not passed explicitly        
         if initial_pose == '/odom':
-            self.pose[0] = self.odo_x + np.random.normal(0.0, 0.1)
-            self.pose[1] = self.odo_y + np.random.normal(0.0, 0.1)
-            self.pose[2] = self.angle_linear_comp(self.odo_yaw,
-                                                  np.random.normal(0.0, 0.05))
+            self.pose[0] = self.odo_x 
+            self.pose[1] = self.odo_y 
+            self.pose[2] = self.odo_yaw
         else: # initialize based on given input value
             self.pose = initial_pose
 
@@ -135,6 +134,7 @@ class EKF_Localization_LandmarkMap():
         # that can be displayed in rviz using Path plugin
         self.ekf_path_pub = rospy.Publisher('/ekf_path', Path, queue_size=5)
         self.odom_path_pub = rospy.Publisher('/odom_path', Path, queue_size=5)
+        self.ekf_pose = rospy.Publisher('/ekf_pose', Pose, queue_size=5)
         self.path_seq = 0
 
 
@@ -216,7 +216,9 @@ class EKF_Localization_LandmarkMap():
         # publish ekf and odom pose estimate as Path messages that can be displayed in rviz
         self.publish_ekf_and_odom_paths()
 
-        
+        self.ekf_pose.publish(self.pose)
+
+    # whenever you see landmark, do this:
     def observation_correction(self, msg):
         '''CALLBACK function that correct state estimatse based on marker observation. 
            AR visual markers are read by the package ar_track_alvar, 
@@ -327,7 +329,8 @@ class EKF_Localization_LandmarkMap():
             print(np.ndarray.flatten(inovation))
             self.pose = np.add(self.pose, np.ndarray.flatten(np.matmul(G, epsilon)))
             cov = np.matmul(G, np.matmul(H_k, self.pose_covariance))
-            self.pose_covariance = np.subtract(self.pose_covariance, cov) 
+            self.pose_covariance = np.subtract(self.pose_covariance, cov)
+
 
 
         
@@ -337,6 +340,8 @@ class EKF_Localization_LandmarkMap():
 
             # publish ekf and odom pose estimate as Path messages that can be displayed in rviz
             self.publish_ekf_and_odom_paths()
+
+        self.ekf_pose.publish(self.pose)
             
 
         
@@ -418,6 +423,7 @@ class EKF_Localization_LandmarkMap():
 
         # publish pose from ekf to the ekf path topic
         self.ekf_path_pub.publish(path_ekf)
+
 
         
     
